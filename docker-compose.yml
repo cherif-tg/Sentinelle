@@ -1,0 +1,57 @@
+# Plateforme locale en nœud unique. NON TESTÉ dans l'environnement de génération :
+# valider au premier lancement et épingler les versions d'images (docs/03_architecture.md).
+services:
+  namenode:
+    image: apache/hadoop:3
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    ports: ["9870:9870"]
+    env_file: ./docker/hadoop.env
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+    volumes: ["hdfs_nn:/tmp/hadoop-root/dfs/name"]
+
+  datanode:
+    image: apache/hadoop:3
+    command: ["hdfs", "datanode"]
+    env_file: ./docker/hadoop.env
+    depends_on: [namenode]
+    volumes: ["hdfs_dn:/tmp/hadoop-root/dfs/data"]
+
+  spark-master:
+    image: apache/spark:3.5.1
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
+    ports: ["8080:8080", "7077:7077"]
+
+  spark-worker:
+    image: apache/spark:3.5.1
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077"]
+    depends_on: [spark-master]
+    environment:
+      SPARK_WORKER_MEMORY: 4g
+      SPARK_WORKER_CORES: 2
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow
+    command: ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000"]
+    ports: ["5000:5000"]
+    volumes: ["mlruns:/mlruns"]
+
+  api:
+    build: { context: ., dockerfile: docker/Dockerfile.api }
+    ports: ["8000:8000"]
+    environment:
+      SL_RISQUE_PARQUET: /data/gold/risque_cellules.parquet
+    volumes: ["./data:/data"]
+
+  dashboard:
+    build: { context: ., dockerfile: docker/Dockerfile.dashboard }
+    ports: ["8501:8501"]
+    environment:
+      SL_RISQUE_PARQUET: /data/gold/risque_cellules.parquet
+    volumes: ["./data:/data"]
+
+volumes:
+  hdfs_nn:
+  hdfs_dn:
+  mlruns:

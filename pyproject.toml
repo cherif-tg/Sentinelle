@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentinelle-lome"
+version = "0.1.0"
+description = "Cartographie dynamique du risque d'inondation du Grand Lomé et exposition du bâti"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["pyyaml", "pandas", "numpy", "scikit-learn", "pyarrow", "mlflow", "fastapi", "uvicorn"]
+
+[project.optional-dependencies]
+gee = ["earthengine-api"]
+spark = ["pyspark", "apache-sedona"]   # épingler les versions (voir docs/03_architecture.md)
+dashboard = ["streamlit", "pydeck"]
+notebooks = ["jupyterlab", "matplotlib", "rasterio"]
+dev = ["pytest", "httpx", "ruff"]
+
+[project.scripts]
+sentinelle-gee = "sentinelle_lome.ingestion.gee_export:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
