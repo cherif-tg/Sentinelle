@@ -1,0 +1,50 @@
+# Configuration centrale de Sentinelle Lomé.
+# Les valeurs marquées « À CALIBRER » ou « À CONFIRMER » sont des points de départ, pas des résultats.
+projet:
+  nom: Sentinelle Lomé
+  slug: sentinelle-lome
+
+zone_etude:
+  nom: Grand Lomé
+  # À CONFIRMER : emprise provisoire (lon_min, lat_min, lon_max, lat_max) à remplacer
+  # par l'emprise administrative réelle du Grand Lomé.
+  emprise_provisoire: [1.10, 6.08, 1.35, 6.30]
+  crs_projete: "EPSG:32631"   # UTM 31N
+
+grille:
+  resolution_m: 30          # alignée sur le MNT 30 m
+  resolution_radar_m: 10    # résolution d'export Sentinel-1
+
+radar:
+  collection: COPERNICUS/S1_GRD
+  polarisations: [VV, VH]
+  passes: [ASCENDING, DESCENDING]
+  fenetre_avant_jours: 30
+  fenetre_apres_jours: 6
+
+labels:               # À CALIBRER sur Lomé
+  seuil_delta_db: -3.0
+  seuil_post_db: -15.0
+  hand_max_m: 15.0
+
+pluie:
+  produit_principal: CHIRPS   # À CONFIRMER (CHIRPS vs IMERG : latence, résolution)
+  collections:
+    CHIRPS: UCSB-CHG/CHIRPS/DAILY
+    IMERG: NASA/GPM_L3/IMERG_V07
+  fenetres_cumul_jours: [1, 3, 7]
+  k_pluie_anterieure: 0.85    # À CALIBRER
+
+batiments:
+  seuil_confiance: 0.7        # À CALIBRER
+  surface_min_m2: 10
+
+modelisation:
+  taille_bloc_m: 2000
+  n_plis: 5
+  cout_fausse_alerte: 1.0           # unités relatives, à fixer avec l'ANPC
+  cout_inondation_manquee: 10.0
+
+stockage:
+  hdfs_uri: hdfs://namenode:8020
+  racine_hdfs: /sentinelle

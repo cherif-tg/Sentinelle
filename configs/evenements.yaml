@@ -1,0 +1,17 @@
+# Catalogue des événements d'inondation de référence.
+# Seuls les faits ci-dessous sont VÉRIFIÉS ; toute date marquée « à confirmer » doit l'être (docs/11).
+evenements:
+  - id: 2020-09-inondation
+    date_pic: null            # à renseigner : date exacte de l'épisode de septembre 2020
+    role: apprentissage
+    source: "Étude Urban Science 2024, doi:10.3390/urbansci8030096 (emprise Sentinel-1 de septembre 2020)"
+
+  - id: 2020-10-charte
+    date_pic: 2020-10-12      # date affichée pour une activation antérieure de la Charte ; à confirmer
+    role: apprentissage
+    source: "https://disasterscharter.org/activations/flood-in-togo-activation-1037-"
+
+  - id: 2026-06-pluies
+    date_pic: 2026-06-29      # pluies nocturnes du 28 au 29 juin 2026 ; activation Charte n°1037 le 2026-07-01
+    role: test_hors_temps
+    source: "https://disasterscharter.org/activations/flood-in-togo-activation-1037-"
