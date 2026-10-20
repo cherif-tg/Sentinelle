@@ -1,4 +1,9 @@
-"""Dashboard Streamlit — carte de risque et synthèse par quartier. NON TESTÉ (nécessite streamlit + pydeck)."""
+"""Dashboard Streamlit — carte de risque et synthèse par quartier.
+
+Lit le Parquet produit par `sentinelle_lome.pipeline.gold` et affiche, s'il existe, le
+bandeau d'avertissement de son `.meta.json`.
+"""
+import json
 import os
 
 import pandas as pd
@@ -14,6 +19,21 @@ if not os.path.exists(chemin):
     st.stop()
 
 df = pd.read_parquet(chemin)
+
+# Bandeau de provenance : les niveaux affichés dépendent d'un ratio de coûts encore provisoire.
+_meta_path = f"{chemin}.meta.json"
+if os.path.exists(_meta_path):
+    with open(_meta_path, encoding="utf-8") as _f:
+        _meta = json.load(_f)
+    st.warning(_meta.get("avertissement", "Données de démonstration, non validées."))
+    _seuils = _meta.get("seuils_alerte") or {}
+    if _seuils:
+        st.caption(
+            "Niveaux d'alerte dérivés d'un ratio de coûts PROVISOIRE "
+            f"(seuil rouge = {_seuils['rouge']:.3f}, orange = {_seuils['orange']:.3f}) : "
+            "une large part de rouge est attendue et ne constitue pas une prévision."
+        )
+
 seuil = st.sidebar.slider("Seuil de probabilité", 0.0, 1.0, 0.5, 0.05)
 quartiers = ["(tous)"] + sorted(df["quartier"].unique().tolist())
 choix = st.sidebar.selectbox("Quartier", quartiers)

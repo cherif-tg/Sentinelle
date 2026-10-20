@@ -1,7 +1,7 @@
-.PHONY: install test lint ingest-dry notebooks api dashboard up down
+.PHONY: install test lint ingest-dry demo notebooks api dashboard up down
 
 install:
-	pip install -e ".[dev]"
+	uv pip install -e ".[dev]"
 
 test:
 	pytest -q
@@ -11,6 +11,9 @@ lint:
 
 ingest-dry:
 	python -m sentinelle_lome.ingestion.gee_export --dry-run
+
+demo:
+	python -m sentinelle_lome.pipeline.gold
 
 notebooks:
 	jupyter nbconvert --to notebook --execute --inplace notebooks/0*.ipynb
