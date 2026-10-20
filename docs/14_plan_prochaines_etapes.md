@@ -7,7 +7,20 @@ Rédigé le 20 octobre 2026, après la livraison du MVP technique (`docs/13_mvp_
 | Acquis | Preuve |
 |---|---|
 | Chaîne `production → API → dashboard` exécutable | 6 644 cellules générées, API interrogée en HTTP réel, dashboard exécuté sans exception |
-| 50 tests, lint propre | exécutés fichier par fichier ; CI GitHub Actions en place (Python 3.11) |
+| Emprise réelle du Grand Lomé | GAUL 2025 (Golfe + Agoè-Nyivé) : 414,9 km², grille masquée sur le contour |
+| Quartiers géoréférencés | 69 polygones OSM (admin_level=10), couvrant 21,3 % du district |
+| 55 tests, lint propre | exécutés fichier par fichier ; CI GitHub Actions en place (Python 3.11) |
+
+**État de la branche :** `phase-2-dashboard` fusionnée dans `main` le 20 octobre 2026
+(fusion `0a2f264`), après passage des 55 tests et du lint sur `main`.
+
+## Avancement des lots
+
+| Lot | État | Reste à faire |
+|---|---|---|
+| 0 — Vérifications | partiel | Contours de la Charte : tranché (inaccessibles → open data). Restent CHIRPS/IMERG, passes S1, contact ANPC |
+| 1 — Données réelles | partiel | Contours et quartiers faits. Restent exports Sentinel-1, pluie, MNT, bâti |
+| 2 à 6 | non commencés | — |
 | Modèles A et B entraînables et évaluables | tests unitaires sur données synthétiques uniquement |
 
 **Ce que le MVP ne prouve pas : rien sur Lomé.** Aucune donnée réelle n'a été traitée, aucun score de
