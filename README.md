@@ -151,6 +151,7 @@ Le MVP ajoute ses propres limites, détaillées dans `docs/13_mvp_demo.md` : rat
 | `docs/11_verifications_semaine1.md` | Checklist de vérifications |
 | `docs/12_references.md` | Sources consultées |
 | `docs/13_mvp_demo.md` | MVP exécutable : commandes, contrat de données, limites |
+| `docs/14_plan_prochaines_etapes.md` | Plan des prochains lots, décisions bloquantes, jalons |
 | `docs/adr/` | Décisions d'architecture |
 
 
