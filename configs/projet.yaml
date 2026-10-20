@@ -42,7 +42,10 @@ batiments:
 modelisation:
   taille_bloc_m: 2000
   n_plis: 5
-  cout_fausse_alerte: 1.0           # unités relatives, à fixer avec l'ANPC
+  # VALEURS ARBITRAIRES de travail : l'ANPC n'a pas fourni de barème de coûts.
+  # Elles fixent le seuil d'alerte (seuil = c_fausse_alerte / (c_fausse_alerte + c_manquee)).
+  # Le tableau de bord permet de les faire varier sans toucher au fichier de risque.
+  cout_fausse_alerte: 1.0
   cout_inondation_manquee: 10.0
 
 stockage:

@@ -63,7 +63,7 @@ sentinelle-lome/
 ├── data/                     # raw, bronze, silver, gold (non versionné)
 ├── notebooks/                # 01 exploration, 02 étiquettes radar, 03 pluie (déjà exécutés, données fictives)
 ├── docker/                   # Dockerfiles, configuration Hadoop
-└── tests/                    # 34 tests unitaires
+└── tests/                    # 43 tests unitaires
 ```
 
 ## Démarrage rapide
@@ -125,6 +125,10 @@ Le Parquet contient `cellule_id, quartier, lon, lat, proba_inondation, niveau_al
 `.meta.json` voisin documente la provenance, le scénario pluvieux et la calibration, et l'API
 comme le dashboard l'affichent. Détails et limites : `docs/13_mvp_demo.md`.
 
+Le **dashboard** intègre son mode d'emploi, recalcule les niveaux d'alerte en direct selon le ratio
+de coûts choisi, et propose deux graphiques de seuil interactifs (distribution des probabilités,
+courbe de sensibilité). Mode d'emploi détaillé : `docs/15_guide_dashboard.md`.
+
 **À lire avant toute démonstration :** `proba_inondation` est une probabilité calibrée *dans un
 monde synthétique*, pas une prévision. Les niveaux d'alerte dérivent du ratio de coûts provisoire
 du YAML (1:10, soit un seuil rouge à 0,0909), qui met mécaniquement une majorité de cellules en
@@ -134,7 +138,7 @@ rouge ; ce ratio doit être arbitré avec l'ANPC avant tout usage sérieux.
 
 | Élément | Statut |
 |---|---|
-| Configuration, plan d'exports, étiquettes radar, variables de pluie, modèles, CV spatiale, exposition, API, production du fichier gold | Tests unitaires passés (**34 tests**, sur données synthétiques) ; lint `ruff` propre |
+| Configuration, plan d'exports, étiquettes radar, variables de pluie, modèles, CV spatiale, exposition, API, production du fichier gold, calculs du dashboard | Tests unitaires passés (**43 tests**, sur données synthétiques) ; lint `ruff` propre |
 | Chaîne gold → API → dashboard | Exécutée de bout en bout sur 10 670 cellules synthétiques ; API interrogée en serveur HTTP réel (dont refus hors emprise), dashboard exécuté via `streamlit.testing` sans exception |
 | Notebooks 01 à 03 | Exécutés de bout en bout sans erreur ; parties Earth Engine et données réelles désactivées par défaut |
 | Exports Earth Engine réels | Non exécutés (authentification requise) |
@@ -177,6 +181,7 @@ Le MVP ajoute ses propres limites, détaillées dans `docs/13_mvp_demo.md` : rat
 | `docs/12_references.md` | Sources consultées |
 | `docs/13_mvp_demo.md` | MVP exécutable : commandes, contrat de données, limites |
 | `docs/14_plan_prochaines_etapes.md` | Plan des prochains lots, décisions bloquantes, jalons |
+| `docs/15_guide_dashboard.md` | Mode d'emploi du tableau de bord et lecture des seuils |
 | `docs/adr/` | Décisions d'architecture |
 
 
