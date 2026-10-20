@@ -19,7 +19,7 @@ Rédigé le 20 octobre 2026, après la livraison du MVP technique (`docs/13_mvp_
 | Lot | État | Reste à faire |
 |---|---|---|
 | 0 — Vérifications | partiel | Contours de la Charte : tranché (inaccessibles → open data). Restent CHIRPS/IMERG, passes S1, contact ANPC |
-| 1 — Données réelles | partiel | Contours et quartiers faits. Restent exports Sentinel-1, pluie, MNT, bâti |
+| 1 — Données réelles | partiel | Contours, quartiers et 6 exports Sentinel-1 lancés. Restent pluie, MNT, bâti |
 | 2 à 6 | non commencés | — |
 | Modèles A et B entraînables et évaluables | tests unitaires sur données synthétiques uniquement |
 

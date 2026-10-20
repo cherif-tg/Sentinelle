@@ -84,6 +84,30 @@ obtenir les contours ANPC est le seul moyen de combler ce trou.
 rouge — **61 % en scénario `moderee`, 76 % en `extreme`**. Ce n'est pas un défaut de calcul mais
 l'effet du ratio de coûts provisoire ; il ne doit pas être lu comme une prévision.
 
+## Exports Sentinel-1 (lancés le 20 octobre 2026)
+
+Composite médian VV+VH, mode IW, 10 m, EPSG:32631, région = contour GAUL de 414,9 km²,
+destination : dossier Drive `sentinelle_lome_s1`.
+
+| Fenêtre | Passe | Scènes | Action |
+|---|---|---|---|
+| 2020-10 asc avant | ASCENDING | 5 | tâche lancée |
+| 2020-10 asc après | ASCENDING | 1 | tâche lancée |
+| 2020-10 desc avant | DESCENDING | 0 | ignorée (aucune scène) |
+| 2020-10 desc après | DESCENDING | 0 | ignorée (aucune scène) |
+| 2026-06 asc avant | ASCENDING | 9 | tâche lancée |
+| 2026-06 asc après | ASCENDING | 2 | tâche lancée |
+| 2026-06 desc avant | DESCENDING | 4 | tâche lancée |
+| 2026-06 desc après | DESCENDING | 1 | tâche lancée |
+
+**Constat méthodologique :** aucune passe descendante n'existe sur la fenêtre de 2020. La
+concordance entre passes prévue par `docs/04_methodologie_labels.md` ne pourra donc pas être
+calculée pour l'événement de 2020 ; l'étiquetage devra s'appuyer sur la seule passe ascendante, avec
+une confiance plus faible à documenter.
+
+État à l'écriture : 1 tâche `RUNNING`, 5 `READY` en file d'attente. Les fichiers n'apparaissent dans
+Drive qu'à la fin de chaque tâche.
+
 ## Vérifications réellement effectuées
 
 - **55 tests** passent, exécutés fichier par fichier : `test_api` 7, `test_pipeline_gold` 7,
