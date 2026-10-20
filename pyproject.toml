@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Cartographie dynamique du risque d'inondation du Grand Lomé et exposition du bâti"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["pyyaml", "pandas", "numpy", "scikit-learn", "pyarrow", "mlflow", "fastapi", "uvicorn"]
+dependencies = ["pyyaml", "pandas", "numpy", "scikit-learn", "pyarrow", "mlflow", "fastapi", "uvicorn", "shapely>=2.0"]
 
 [project.optional-dependencies]
 gee = ["earthengine-api"]

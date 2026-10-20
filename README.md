@@ -51,9 +51,9 @@ sentinelle-lome/
 ├── Makefile                  # install, test, lint, ingest-dry, demo, api, dashboard, up, down
 ├── docker-compose.yml        # HDFS, Spark, MLflow, API, dashboard (non testé)
 ├── configs/                  # projet.yaml, evenements.yaml
-├── docs/                     # documents d'étude 00 à 13 + ADR
+├── docs/                     # documents d'étude 00 à 15 + ADR
 ├── src/sentinelle_lome/
-│   ├── ingestion/            # exports Earth Engine, filtrage des bâtiments
+│   ├── ingestion/            # exports Earth Engine (Sentinel-1, contours), filtrage des bâtiments
 │   ├── labels/               # détection d'eau par changement radar
 │   ├── processing/           # variables de pluie (pandas, Spark), session Spark
 │   ├── models/               # susceptibilité, déclenchement, exposition, CV spatiale
@@ -63,7 +63,7 @@ sentinelle-lome/
 ├── data/                     # raw, bronze, silver, gold (non versionné)
 ├── notebooks/                # 01 exploration, 02 étiquettes radar, 03 pluie (déjà exécutés, données fictives)
 ├── docker/                   # Dockerfiles, configuration Hadoop
-└── tests/                    # 43 tests unitaires
+└── tests/                    # 50 tests unitaires
 ```
 
 ## Démarrage rapide
@@ -114,10 +114,14 @@ La chaîne `production → API → dashboard` tourne de bout en bout sur des **d
 synthétiques**. `data/` n'étant pas versionné, un clone neuf doit d'abord produire le fichier :
 
 ```bash
-make demo                     # 10 670 cellules à 250 m (~30 s)
+make demo                     # 6 644 cellules à 250 m (~30 s)
 make api                      # http://127.0.0.1:8000 — /sante, /meta, /risque/point, /risque/quartier/{nom}
 make dashboard                # http://localhost:8501
 ```
+
+L'emprise de travail est le périmètre GAUL 2025 du District autonome du Grand Lomé (préfectures
+Golfe et Agoè-Nyivé, 414,9 km²), exporté par `python -m sentinelle_lome.ingestion.gee_contours` ;
+la grille ne conserve que les cellules situées à l'intérieur du contour.
 
 Variantes : `python -m sentinelle_lome.pipeline.gold --resolution-m 500 --scenario extreme`.
 
@@ -138,8 +142,8 @@ rouge ; ce ratio doit être arbitré avec l'ANPC avant tout usage sérieux.
 
 | Élément | Statut |
 |---|---|
-| Configuration, plan d'exports, étiquettes radar, variables de pluie, modèles, CV spatiale, exposition, API, production du fichier gold, calculs du dashboard | Tests unitaires passés (**43 tests**, sur données synthétiques) ; lint `ruff` propre |
-| Chaîne gold → API → dashboard | Exécutée de bout en bout sur 10 670 cellules synthétiques ; API interrogée en serveur HTTP réel (dont refus hors emprise), dashboard exécuté via `streamlit.testing` sans exception |
+| Configuration, plan d'exports, étiquettes radar, variables de pluie, modèles, CV spatiale, exposition, API, production du fichier gold, calculs du dashboard | Tests unitaires passés (**50 tests**, sur données synthétiques) ; lint `ruff` propre |
+| Chaîne gold → API → dashboard | Exécutée de bout en bout sur 6 644 cellules synthétiques ; API interrogée en serveur HTTP réel (dont refus hors emprise), dashboard exécuté via `streamlit.testing` sans exception |
 | Notebooks 01 à 03 | Exécutés de bout en bout sans erreur ; parties Earth Engine et données réelles désactivées par défaut |
 | Exports Earth Engine réels | Non exécutés (authentification requise) |
 | Spark, Sedona, `docker-compose.yml` | Non exécutés ; syntaxe vérifiée seulement |

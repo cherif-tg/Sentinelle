@@ -60,12 +60,22 @@ def composite_s1(ee, aoi, debut: str, fin: str, passe: str):
     )
 
 
+def aoi_ee(ee, config: dict):
+    """Emprise de travail : contour administratif s'il existe, sinon rectangle de configuration."""
+    from sentinelle_lome.contours import charger_contour
+
+    geometry = charger_contour(config["zone_etude"].get("contour"))
+    if geometry is not None:
+        return ee.Geometry(geometry.__geo_interface__)
+    lon_min, lat_min, lon_max, lat_max = config["zone_etude"]["emprise"]
+    return ee.Geometry.Rectangle([lon_min, lat_min, lon_max, lat_max])
+
+
 def executer(config: dict, evenements: list[dict], projet_gee: str, dossier_drive: str) -> None:
     import ee  # import tardif : dépendance optionnelle (extra "gee")
 
     ee.Initialize(project=projet_gee)
-    lon_min, lat_min, lon_max, lat_max = config["zone_etude"]["emprise_provisoire"]
-    aoi = ee.Geometry.Rectangle([lon_min, lat_min, lon_max, lat_max])
+    aoi = aoi_ee(ee, config)
     for t in plan_exports(config, evenements):
         image = composite_s1(ee, aoi, t["debut"], t["fin"], t["passe"])
         tache = ee.batch.Export.image.toDrive(
