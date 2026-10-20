@@ -5,7 +5,9 @@ import pytest
 from shapely.geometry import box, mapping
 
 from sentinelle_lome.contours import (
+    affecter_par_polygones,
     charger_contour,
+    charger_quartiers,
     emprise_rectangulaire,
     masque_points,
     surface_km2,
@@ -65,3 +67,33 @@ def test_surface_km2_geometrie_vide():
 
 def test_emprise_rectangulaire_arrondie():
     assert emprise_rectangulaire(box(1.0, 6.0, 1.2, 6.2)) == [1.0, 6.0, 1.2, 6.2]
+
+
+def test_charger_quartiers_fichier_absent(tmp_path):
+    assert charger_quartiers(None) == []
+    assert charger_quartiers(tmp_path / "absent.geojson") == []
+
+
+def test_charger_quartiers_lit_les_noms(tmp_path):
+    contenu = {
+        "type": "FeatureCollection",
+        "features": [
+            {"type": "Feature", "properties": {"nom": "Bè"}, "geometry": mapping(box(1.20, 6.12, 1.22, 6.14))},
+            {"type": "Feature", "properties": {"nom": "Tokoin"}, "geometry": mapping(box(1.22, 6.12, 1.24, 6.14))},
+        ],
+    }
+    chemin = tmp_path / "quartiers.geojson"
+    chemin.write_text(json.dumps(contenu), encoding="utf-8")
+    quartiers = charger_quartiers(chemin)
+    assert [nom for nom, _ in quartiers] == ["Bè", "Tokoin"]
+
+
+def test_affecter_par_polygones_et_defaut():
+    quartiers = [("Bè", box(1.20, 6.12, 1.22, 6.14)), ("Tokoin", box(1.22, 6.12, 1.24, 6.14))]
+    noms = affecter_par_polygones(quartiers, [1.21, 1.23, 1.30], [6.13, 6.13, 6.13])
+    assert noms.tolist() == ["Bè", "Tokoin", "non cartographié"]
+
+
+def test_affecter_par_polygones_refuse_des_tailles_differentes():
+    with pytest.raises(ValueError):
+        affecter_par_polygones([("Bè", box(0, 0, 1, 1))], [0.5, 0.6], [0.5])

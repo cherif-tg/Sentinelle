@@ -30,6 +30,7 @@ COULEURS = {
     "vert": [46, 160, 67, 150],
 }
 LIBELLES = {"rouge": "🟥 rouge", "orange": "🟧 orange", "vert": "🟩 vert"}
+NON_CARTOGRAPHIE = "non cartographié"
 
 
 def espace_milliers(n: int) -> str:
@@ -162,6 +163,8 @@ with st.sidebar:
     st.divider()
     st.subheader("Filtre")
     quartiers_disponibles = sorted(df["quartier"].astype(str).unique().tolist())
+    if NON_CARTOGRAPHIE in quartiers_disponibles:
+        quartiers_disponibles = [q for q in quartiers_disponibles if q != NON_CARTOGRAPHIE] + [NON_CARTOGRAPHIE]
     choix_quartier = st.selectbox(
         "Quartier",
         ["(tous)"] + quartiers_disponibles,
@@ -188,7 +191,8 @@ vue = vue.assign(
 )
 vue["couleur"] = vue["niveau"].map(COULEURS).tolist()
 
-resume = resume_global(vue, seuil_rouge, seuil_orange)
+resume = resume_global(vue, seuil_rouge, seuil_orange, exclure=[NON_CARTOGRAPHIE])
+couverture = float((vue["quartier"].astype(str) != NON_CARTOGRAPHIE).mean())
 
 col1, col2, col3, col4 = st.columns(4)
 col1.metric(
@@ -211,8 +215,14 @@ col3.metric(
 col4.metric(
     "Quartiers avec au moins une cellule rouge",
     f"{resume['n_quartiers_rouge']} / {resume['n_quartiers']}",
-    help="Un quartier est compté dès qu'une seule de ses cellules atteint le seuil rouge.",
+    help="Un quartier est compté dès qu'une seule de ses cellules atteint le seuil rouge. « non cartographié » est exclu du décompte.",
 )
+
+if couverture < 1.0:
+    st.caption(
+        f"Couverture cartographique : **{couverture:.0%}** des cellules rattachées à un quartier OSM. "
+        "Le reste porte le libellé « non cartographié » : OSM ne couvre que le cœur urbain du district."
+    )
 
 if choice_note := ("Vue filtrée sur **" + choix_quartier + "**." if choix_quartier != "(tous)" else None):
     st.caption(choice_note)
@@ -385,10 +395,21 @@ travail.
 # --------------------------------------------------------------------------------------
 with onglet_quartiers:
     agrege = agregat_par_quartier(vue, seuil_rouge, seuil_orange)
+    hors_carte = agrege[agrege["quartier"] == NON_CARTOGRAPHIE]
+    agrege = agrege[agrege["quartier"] != NON_CARTOGRAPHIE]
     st.markdown(
         "Part des cellules en rouge par quartier, pour le seuil courant. Un quartier à 100 % signifie "
         "que **toutes** ses cellules atteignent le seuil, pas que le quartier est entièrement inondé."
     )
+    if not hors_carte.empty:
+        st.info(
+            f"{espace_milliers(int(hors_carte['n_cellules'].iloc[0]))} cellules ne sont rattachées à aucun quartier "
+            "cartographié dans OpenStreetMap et n'apparaissent donc pas ci-dessous. Le district n'est couvert "
+            "qu'à ~21 % par OSM ; les contours ANPC sont nécessaires pour le reste.",
+            icon="🗺️",
+        )
+    if agrege.empty:
+        st.warning("Aucun quartier cartographié dans cette vue.")
 
     barres = (
         alt.Chart(agrege)
@@ -493,3 +514,7 @@ st.caption(
     f"Source : {meta.get('source', 'inconnue')} · généré le {meta.get('date_generation', 'inconnu')} · "
     f"{espace_milliers(len(df))} cellules au total · seuil rouge courant {seuil_rouge:.3f}"
 )
+if (meta.get("quartiers") or {}).get("attribution"):
+    st.caption(
+        "Quartiers : " + str(meta["quartiers"]["attribution"]) + " · Contour : FAO/GAUL 2025 (Earth Engine)"
+    )

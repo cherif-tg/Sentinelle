@@ -25,7 +25,13 @@ import pandas as pd
 from sklearn.isotonic import IsotonicRegression
 
 from sentinelle_lome.config import charger_config
-from sentinelle_lome.contours import charger_contour, masque_points, surface_km2
+from sentinelle_lome.contours import (
+    affecter_par_polygones,
+    charger_contour,
+    charger_quartiers,
+    masque_points,
+    surface_km2,
+)
 from sentinelle_lome.models.declenchement import entrainer_declenchement, niveau_alerte, seuil_decision
 from sentinelle_lome.models.susceptibilite import VARIABLES_PAR_DEFAUT, donnees_synthetiques, entrainer
 
@@ -230,15 +236,15 @@ def ajuster_calibration(score: np.ndarray, etiquettes: np.ndarray) -> IsotonicRe
     )
 
 
-def affecter_quartiers(lon: np.ndarray, lat: np.ndarray) -> np.ndarray:
-    """Quartier le plus proche d'après des centroïdes APPROXIMATIFS (affectation PROVISOIRE).
+def affecter_quartiers(lon: np.ndarray, lat: np.ndarray, quartiers=None) -> np.ndarray:
+    """Quartier de chaque cellule : polygones OSM si fournis, sinon centroïdes provisoires.
 
-    Aucun contour administratif réel n'est utilisé : chaque cellule est rattachée au centroïde
-    le plus proche (distance en degrés, longitude corrigée par cos(latitude)), avec des
-    centroïdes arrondis à la main. Une cellule limitrophe peut donc être classée dans le
-    mauvais quartier. À remplacer par une jointure spatiale sur les contours officiels dès
-    qu'ils seront disponibles.
+    Avec des polygones, une cellule hors de toute zone cartographiée est marquée « non
+    cartographié » plutôt que rattachée de force : l'absence de donnée est une information.
+    Sans polygones (fichier absent), on retombe sur les centroïdes APPROXIMATIFS décrits plus bas.
     """
+    if quartiers:
+        return affecter_par_polygones(quartiers, lon, lat)
     noms = list(QUARTIERS)
     centres = np.array([QUARTIERS[n] for n in noms], dtype=float)  # lignes : (lat, lon)
     facteur_lon = np.cos(np.radians(np.mean(lat)))
@@ -278,6 +284,7 @@ def generer_gold(
     cfg = config if config is not None else charger_config()
     pluie = scenario_pluie(scenario)
     geometry = charger_contour(contour if contour is not None else cfg["zone_etude"].get("contour"))
+    liste_quartiers = charger_quartiers(cfg["zone_etude"].get("quartiers"))
     grille = grille_emprise(cfg["zone_etude"]["emprise"], resolution_m, graine, geometry)
     grille = grille.assign(**pluie)
 
@@ -290,10 +297,12 @@ def generer_gold(
     taux_positifs = float(np.mean(etiquettes_calibration))
     seuil_orange, seuil_rouge = seuils_alerte(cfg)
 
+    quartiers = affecter_quartiers(grille["lon"].to_numpy(), grille["lat"].to_numpy(), liste_quartiers)
+
     df = pd.DataFrame(
         {
             "cellule_id": grille["cellule_id"].to_numpy(),
-            "quartier": affecter_quartiers(grille["lon"].to_numpy(), grille["lat"].to_numpy()),
+            "quartier": quartiers,
             "lon": grille["lon"].to_numpy(),
             "lat": grille["lat"].to_numpy(),
             "proba_inondation": proba,
@@ -325,7 +334,17 @@ def generer_gold(
                 "sur le risque d'inondation reel a Lome"
             ),
         },
-        "affectation_quartiers": "centroides approximatifs, plus proche voisin (provisoire)",
+        "affectation_quartiers": (
+            "polygones OpenStreetMap (admin_level=10)"
+            if liste_quartiers
+            else "centroides approximatifs, plus proche voisin (provisoire)"
+        ),
+        "quartiers": {
+            "fichier": cfg["zone_etude"].get("quartiers"),
+            "n_polygones": len(liste_quartiers),
+            "part_non_cartographiee": round(float(np.mean(quartiers == "non cartographié")), 4),
+            "attribution": "© OpenStreetMap contributors (ODbL 1.0)" if liste_quartiers else None,
+        },
         "contour": {
             "fichier": contour if contour is not None else cfg["zone_etude"].get("contour"),
             "masque": geometry is not None,

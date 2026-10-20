@@ -42,7 +42,7 @@ le fichier de risque.
 |---|---|---|
 | Carte | Une cellule par point, colorée selon le seuil courant, sur le tracé du territoire | Survoler pour le quartier et la probabilité ; la répartition chiffrée est sous la carte |
 | Seuils d'alerte | Distribution des probabilités et courbe de sensibilité | La ligne verticale est le seuil ; le point rouge rappelle la position actuelle |
-| Quartiers | Part de cellules en rouge par quartier, triée | 100 % signifie « toutes les cellules atteignent le seuil », pas « quartier entièrement inondé » |
+| Quartiers | Part de cellules en rouge par quartier, triée | 100 % signifie « toutes les cellules atteignent le seuil », pas « quartier entièrement inondé ». Les cellules hors zone cartographiée sont comptées à part |
 | Données et méthode | Aperçu des cellules, export CSV, provenance, limites | Le bouton d'export restitue exactement la vue filtrée |
 
 ## Indicateurs affichés
@@ -52,7 +52,10 @@ le fichier de risque.
 | Cellules au-dessus du seuil rouge | Nombre et part des cellules dont `proba_inondation >= seuil_rouge` |
 | Probabilité moyenne | Moyenne de `proba_inondation` sur la vue ; sensible aux extrêmes |
 | Probabilité maximale | Cellule la plus exposée de la vue |
-| Quartiers avec au moins une cellule rouge | Un quartier compte dès qu'une cellule atteint le seuil |
+| Quartiers avec au moins une cellule rouge | Un quartier compte dès qu'une cellule atteint le seuil ; « non cartographié » est exclu |
+
+Sous ces indicateurs, une ligne indique la **couverture cartographique** : la part des cellules
+rattachées à un quartier OSM. Elle est d'environ 21 % sur l'ensemble du district.
 
 Les niveaux sont **recalculés à l'affichage** : la colonne `niveau_alerte` du fichier correspond aux
 seuils utilisés lors de sa génération, et peut donc différer de ce que montre l'écran.
@@ -61,8 +64,8 @@ seuils utilisés lors de sa génération, et peut donc différer de ce que montr
 
 - Les valeurs ne décrivent pas le risque réel à Lomé : elles sont synthétiques.
 - Le ratio de coûts est arbitraire, faute de barème ANPC.
-- Les quartiers viennent de centroïdes approximatifs, pas de contours administratifs : une cellule
-  limitrophe peut changer de quartier.
+- Les quartiers viennent d'OpenStreetMap et ne couvrent que **21 % du district** : les cellules
+  restantes sont marquées « non cartographié » et exclues du décompte des quartiers touchés.
 - Les cellules situées sur la lagune ou l'océan ne sont pas masquées.
 - La pluie est uniforme : le modèle de déclenchement ne produit aucune variation spatiale.
 

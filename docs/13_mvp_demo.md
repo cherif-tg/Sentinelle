@@ -49,7 +49,26 @@ python -m sentinelle_lome.ingestion.gee_contours --projet-gee <id>   # export r�
   cellules à 250 m, soit 1,001 par maille théorique.
 
 **Limite de la source :** GAUL s'arrête au niveau 2 (préfectures). Les 13 communes du DAGL et les
-quartiers n'y figurent pas — d'où le maintien de centroïdes pour les quartiers.
+quartiers n'y figurent pas.
+
+## Quartiers (OpenStreetMap)
+
+```bash
+python -m sentinelle_lome.ingestion.osm_quartiers --dry-run
+python -m sentinelle_lome.ingestion.osm_quartiers
+```
+
+- Source : relations OSM `boundary=administrative` de niveau 10, reconstituées par recollage des
+tronçons (`ways`) en anneaux, puis en polygones.
+- Sortie : `data/raw/contours/quartiers_osm.geojson` — **69 quartiers** (Bè, Tokoin, Kodjoviakopé…).
+- Affectation : une cellule est rattachée au polygone qui la contient, point sur frontière exclu.
+- Licence : **© OpenStreetMap contributors, ODbL 1.0** — attribution affichée dans le dashboard et
+  reportée dans les métadonnées.
+
+**Couverture réelle : 89,8 km² sur 414,9, soit 21,3 % du district.** OSM ne cartographie que le
+cœur urbain ; Agoè-Nyivé n'a quasiment aucun quartier saisi. Les cellules restantes portent le
+libellé `non cartographié` (78,7 % des cellules à 250 m) plutôt qu'un rattachement inventé —
+obtenir les contours ANPC est le seul moyen de combler ce trou.
 
 ## Ce que valent les chiffres
 
@@ -67,12 +86,13 @@ l'effet du ratio de coûts provisoire ; il ne doit pas être lu comme une prévi
 
 ## Vérifications réellement effectuées
 
-- **50 tests** passent, exécutés fichier par fichier : `test_api` 7, `test_pipeline_gold` 7,
-  `test_contours` 7, `test_tableau_de_bord` 9, `test_config_et_plan` 3, `test_dimensionnement` 5,
+- **55 tests** passent, exécutés fichier par fichier : `test_api` 7, `test_pipeline_gold` 7,
+  `test_contours` 11, `test_tableau_de_bord` 10, `test_config_et_plan` 3, `test_dimensionnement` 5,
   `test_labels_et_features` 7, `test_modeles` 5.
 - `ruff check src tests dashboard` : propre.
 - Contour : superficie locale (414,9 km²) identique à celle d'Earth Engine ; toutes les cellules du
   fichier gold sont à l'intérieur du polygone.
+- Quartiers : 69 polygones OSM valides, sans recouvrement entre eux (contrôle par union).
 - API interrogée en serveur HTTP réel (uvicorn) : `/sante` 200, `/meta` 200, `/risque/point` dans
   l'emprise 200, hors emprise (Paris) 422, `/risque/quartier/Bè` 200, quartier inconnu 404.
 - Dashboard exécuté via `streamlit.testing.v1.AppTest` : zéro exception, titre, bandeau
@@ -82,8 +102,8 @@ l'effet du ratio de coûts provisoire ; il ne doit pas être lu comme une prévi
 
 1. **Ratio de coûts provisoire** : les niveaux d'alerte ne sont pas exploitables avant arbitrage
    avec l'ANPC. C'est la première décision à prendre.
-2. **Quartiers par centroïdes approximatifs** : l'emprise est désormais le vrai périmètre, mais les
-   quartiers n'ont pas de polygones ; une cellule limitrophe peut être rattachée au mauvais quartier.
+2. **Quartiers partiellement cartographiés** : 69 polygones OSM couvrent 21 % du district ; 78,7 %
+   des cellules sont « non cartographié ». Les contours ANPC sont nécessaires pour le reste.
 3. **Aucun masque eau / lagune** : des cellules situées sur l'océan ou la lagune sont comptées
    comme des quartiers.
 4. **Pluie uniforme** sur l'emprise et terrain **sans autocorrélation spatiale** : le modèle B ne
@@ -97,8 +117,7 @@ l'effet du ratio de coûts provisoire ; il ne doit pas être lu comme une prévi
 ## Prochain lot recommandé
 
 1. Faire arbitrer `cout_fausse_alerte` / `cout_inondation_manquee` par l'ANPC, puis recalculer.
-2. Remplacer les centroïdes de quartiers par une jointure sur des polygones (OSM ou données ANPC) :
-   l'emprise, elle, est déjà réelle.
+2. Obtenir les contours de quartiers ANPC pour couvrir les 79 % du district absents d'OSM.
 3. Masquer l'eau (hydrographie) avant agrégation par quartier.
 4. Brancher le modèle C et la page « scénarios de pluie » du dashboard.
 5. Donner au modèle B une dimension spatiale (pluie par zone) pour qu'il cesse d'être décoratif.

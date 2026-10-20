@@ -74,6 +74,19 @@ def test_resume_global_compte_les_quartiers_touches():
     assert resume["n_quartiers_rouge"] == 2  # A et B, pas C
 
 
+def test_resume_global_exclut_le_non_cartographie_du_decompte():
+    df = pd.DataFrame(
+        {
+            "quartier": ["A", "A", "non cartographié", "non cartographié"],
+            "proba_inondation": [0.9, 0.0, 0.9, 0.9],
+        }
+    )
+    resume = resume_global(df, seuil_rouge=0.5, seuil_orange=0.25, exclure=["non cartographié"])
+    assert resume["n_cellules"] == 4  # les cellules restent comptées
+    assert resume["n_quartiers"] == 1  # un trou de cartographie n'est pas un quartier
+    assert resume["n_quartiers_rouge"] == 1
+
+
 def test_niveaux_recalcules_respecte_les_seuils():
     niveaux = niveaux_recalcules([0.05, 0.3, 0.9], seuil_rouge=0.5, seuil_orange=0.25)
     assert list(niveaux) == ["vert", "orange", "rouge"]

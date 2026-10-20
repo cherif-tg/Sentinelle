@@ -74,3 +74,41 @@ def emprise_rectangulaire(geometrie: BaseGeometry) -> list[float]:
     """Emprise [lon_min, lat_min, lon_max, lat_max] du contour, arrondie à 6 décimales."""
     lon_min, lat_min, lon_max, lat_max = geometrie.bounds
     return [round(float(v), 6) for v in (lon_min, lat_min, lon_max, lat_max)]
+
+
+def charger_quartiers(chemin: str | Path | None) -> list[tuple[str, BaseGeometry]]:
+    """Liste (nom, géométrie) des quartiers d'un GeoJSON ; liste vide si le fichier manque.
+
+    Un fichier absent n'est pas une erreur : l'appelant retombe alors sur l'affectation par
+    centroïdes, et doit le signaler dans ses métadonnées.
+    """
+    if not chemin:
+        return []
+    fichier = Path(chemin)
+    if not fichier.exists():
+        return []
+    contenu = json.loads(fichier.read_text(encoding="utf-8"))
+    quartiers: list[tuple[str, BaseGeometry]] = []
+    for entite in contenu.get("features", []):
+        nom = (entite.get("properties") or {}).get("nom")
+        if nom and entite.get("geometry"):
+            quartiers.append((str(nom), shape(entite["geometry"])))
+    return quartiers
+
+
+def affecter_par_polygones(
+    quartiers: list[tuple[str, BaseGeometry]], lon, lat, defaut: str = "non cartographié"
+) -> np.ndarray:
+    """Nom du quartier contenant chaque point ; `defaut` si aucun polygone ne le couvre.
+
+    Les points situés exactement sur une frontière ne sont contenus par aucun polygone et tombent
+    donc dans `defaut` : cas marginal, assumé pour éviter un double rattachement arbitraire.
+    """
+    lon_arr = np.asarray(lon, dtype=float).ravel()
+    lat_arr = np.asarray(lat, dtype=float).ravel()
+    if lon_arr.shape != lat_arr.shape:
+        raise ValueError("lon et lat doivent avoir la même longueur")
+    noms = np.full(lon_arr.shape, defaut, dtype=object)
+    for nom, geometrie in quartiers:
+        noms[contains_xy(geometrie, lon_arr, lat_arr)] = nom
+    return noms
