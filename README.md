@@ -53,7 +53,7 @@ sentinelle-lome/
 ├── configs/                  # projet.yaml, evenements.yaml
 ├── docs/                     # documents d'étude 00 à 15 + ADR
 ├── src/sentinelle_lome/
-│   ├── ingestion/            # exports Earth Engine (Sentinel-1, contours), filtrage des bâtiments
+│   ├── ingestion/            # exports Earth Engine (Sentinel-1, contours), quartiers OSM, filtrage des bâtiments
 │   ├── labels/               # détection d'eau par changement radar
 │   ├── processing/           # variables de pluie (pandas, Spark), session Spark
 │   ├── models/               # susceptibilité, déclenchement, exposition, CV spatiale
@@ -63,7 +63,7 @@ sentinelle-lome/
 ├── data/                     # raw, bronze, silver, gold (non versionné)
 ├── notebooks/                # 01 exploration, 02 étiquettes radar, 03 pluie (déjà exécutés, données fictives)
 ├── docker/                   # Dockerfiles, configuration Hadoop
-└── tests/                    # 50 tests unitaires
+└── tests/                    # 55 tests unitaires
 ```
 
 ## Démarrage rapide
@@ -123,6 +123,11 @@ L'emprise de travail est le périmètre GAUL 2025 du District autonome du Grand 
 Golfe et Agoè-Nyivé, 414,9 km²), exporté par `python -m sentinelle_lome.ingestion.gee_contours` ;
 la grille ne conserve que les cellules situées à l'intérieur du contour.
 
+Les quartiers viennent d'OpenStreetMap (`python -m sentinelle_lome.ingestion.osm_quartiers`,
+relations `admin_level=10`, **© OpenStreetMap contributors**, ODbL 1.0). OSM ne couvre que le cœur
+urbain : ~21 % de la superficie du district, le reste est marqué « non cartographié » dans les
+données et signalé dans le dashboard.
+
 Variantes : `python -m sentinelle_lome.pipeline.gold --resolution-m 500 --scenario extreme`.
 
 Le Parquet contient `cellule_id, quartier, lon, lat, proba_inondation, niveau_alerte` ; un fichier
@@ -142,7 +147,7 @@ rouge ; ce ratio doit être arbitré avec l'ANPC avant tout usage sérieux.
 
 | Élément | Statut |
 |---|---|
-| Configuration, plan d'exports, étiquettes radar, variables de pluie, modèles, CV spatiale, exposition, API, production du fichier gold, calculs du dashboard | Tests unitaires passés (**50 tests**, sur données synthétiques) ; lint `ruff` propre |
+| Configuration, plan d'exports, étiquettes radar, variables de pluie, modèles, CV spatiale, exposition, API, production du fichier gold, calculs du dashboard, contours et quartiers | Tests unitaires passés (**55 tests**, sur données synthétiques) ; lint `ruff` propre |
 | Chaîne gold → API → dashboard | Exécutée de bout en bout sur 6 644 cellules synthétiques ; API interrogée en serveur HTTP réel (dont refus hors emprise), dashboard exécuté via `streamlit.testing` sans exception |
 | Notebooks 01 à 03 | Exécutés de bout en bout sans erreur ; parties Earth Engine et données réelles désactivées par défaut |
 | Exports Earth Engine réels | Non exécutés (authentification requise) |

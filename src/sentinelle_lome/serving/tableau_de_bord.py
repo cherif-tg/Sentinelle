@@ -79,12 +79,17 @@ def agregat_par_quartier(df: pd.DataFrame, seuil_rouge: float, seuil_orange: flo
     return agrege.sort_values(["part_rouge", "proba_moyenne"], ascending=False).reset_index(drop=True)
 
 
-def resume_global(df: pd.DataFrame, seuil_rouge: float, seuil_orange: float) -> dict:
-    """Indicateurs de synthèse affichés en tête du tableau de bord."""
+def resume_global(df: pd.DataFrame, seuil_rouge: float, seuil_orange: float, exclure: list[str] | None = None) -> dict:
+    """Indicateurs de synthèse affichés en tête du tableau de bord.
+
+    `exclure` retire certaines valeurs de quartier (par exemple « non cartographié ») du décompte
+    des quartiers touchés : un trou de cartographie n'est pas un quartier.
+    """
     if "proba_inondation" not in df.columns:
         raise KeyError("colonne absente du fichier de risque : 'proba_inondation'")
     proba = df["proba_inondation"].to_numpy(dtype=float)
-    par_quartier = agregat_par_quartier(df, seuil_rouge, seuil_orange) if "quartier" in df.columns else None
+    base = df[~df["quartier"].isin(exclure)] if (exclure and "quartier" in df.columns) else df
+    par_quartier = agregat_par_quartier(base, seuil_rouge, seuil_orange) if "quartier" in df.columns else None
     return {
         "n_cellules": int(proba.size),
         "n_au_dessus": int(np.sum(proba >= seuil_rouge)),
