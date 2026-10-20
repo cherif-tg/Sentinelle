@@ -76,7 +76,32 @@ make demo                     # produit data/gold/risque_cellules.parquet (synth
 make ingest-dry               # affiche le plan d'exports Sentinel-1, sans appeler Earth Engine
 ```
 
-Sous Windows (PowerShell) : `.\\.venv\\Scripts\\Activate.ps1` remplace la ligne d'activation.
+### Sous Windows (PowerShell)
+
+`make` n'est pas fourni avec Windows. Deux options : l'installer (`choco install make`, en
+administrateur), ou lancer directement les commandes équivalentes ci-dessous, sans dépendance
+supplémentaire.
+
+⚠️ Le `python` du PATH n'est pas celui du projet : sans environnement activé, `pytest` échoue à
+l'import de `pandas`. Appelez explicitement le Python du `.venv`, ou activez-le :
+
+```powershell
+.\.venv\Scripts\Activate.ps1   # si PowerShell refuse : Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+| Cible `make` | Équivalent PowerShell |
+|---|---|
+| `make install` | `uv pip install --python .venv\Scripts\python.exe -e ".[dev]"` |
+| `make test` | `.\.venv\Scripts\python.exe -m pytest tests\test_api.py -q` (fichier par fichier) |
+| `make lint` | `.\.venv\Scripts\python.exe -m ruff check src tests dashboard` |
+| `make demo` | `.\.venv\Scripts\python.exe -m sentinelle_lome.pipeline.gold` |
+| `make ingest-dry` | `.\.venv\Scripts\python.exe -m sentinelle_lome.ingestion.gee_export --dry-run` |
+| `make api` | `.\.venv\Scripts\python.exe -m uvicorn sentinelle_lome.serving.api:app --port 8000` |
+| `make dashboard` | `.\.venv\Scripts\python.exe -m streamlit run dashboard/app.py` |
+| `make up` / `make down` | `docker compose up -d` / `docker compose down` |
+
+Les cibles `api` et `dashboard` occupent le terminal : ouvrez une seconde fenêtre pour l'autre.
+Lancer les fichiers de test séparément isole une régression plus vite que la suite complète.
 
 Pour les exports réels : `pip install -e ".[gee]"`, `earthengine authenticate`, puis
 `python -m sentinelle_lome.ingestion.gee_export --projet-gee VOTRE_PROJET`.
