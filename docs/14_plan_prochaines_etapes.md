@@ -6,8 +6,8 @@ Rédigé le 20 octobre 2026, après la livraison du MVP technique (`docs/13_mvp_
 
 | Acquis | Preuve |
 |---|---|
-| Chaîne `production → API → dashboard` exécutable | 10 670 cellules générées, API interrogée en HTTP réel, dashboard exécuté sans exception |
-| 34 tests, lint propre | exécutés fichier par fichier ; CI GitHub Actions en place (Python 3.11) |
+| Chaîne `production → API → dashboard` exécutable | 6 644 cellules générées, API interrogée en HTTP réel, dashboard exécuté sans exception |
+| 50 tests, lint propre | exécutés fichier par fichier ; CI GitHub Actions en place (Python 3.11) |
 | Modèles A et B entraînables et évaluables | tests unitaires sur données synthétiques uniquement |
 
 **Ce que le MVP ne prouve pas : rien sur Lomé.** Aucune donnée réelle n'a été traitée, aucun score de
@@ -60,7 +60,7 @@ Exports S1 aux dates d'événements, MNT GLO-30, pluie quotidienne, bâtiments O
 `silver/pluie_quotidienne`.
 
 **Critère d'acceptation :** une seule commande rejoue l'ingestion ; le manifest est complet ; le
-nombre de cellules à 30 m est proche de **751 193** (voir dimensionnement ci-dessous).
+nombre de cellules à 30 m est proche de **461 000** (voir dimensionnement ci-dessous).
 
 ### Lot 2 — Étiquettes radar et modèle A (2,5 semaines)
 
@@ -100,15 +100,15 @@ automatique sans validation tracée. À n'ouvrir qu'une fois les seuils arbitré
 
 ## Dimensionnement : ce que le passage à 30 m change
 
-Calculé avec `src/sentinelle_lome/dimensionnement.py` sur l'emprise provisoire (676 km²) :
+Calculé avec `src/sentinelle_lome/dimensionnement.py` sur le périmètre GAUL 2025 (414,9 km²) :
 
 | Résolution | Cellules | Commentaire |
 |---|---|---|
-| 250 m | ~10 800 | taille du MVP actuel |
-| 30 m | ~751 000 | tient en mémoire pour une date |
-| 10 m | ~6 760 000 | résolution radar ; à éviter hors besoin |
+| 250 m | ~6 638 | taille du MVP actuel |
+| 30 m | ~461 000 | tient en mémoire pour une date |
+| 10 m | ~4 150 000 | résolution radar ; à éviter hors besoin |
 
-Table cellule × jour à 30 m sur un an : **274 millions de lignes, 17,5 Go brut**. C'est seulement à
+Table cellule × jour à 30 m sur un an : **168 millions de lignes, 10,8 Go brut**. C'est seulement à
 cette échelle que Spark et Sedona se justifient — pas pour une seule date. Conclusion : garder
 pandas pour la table de cellules, et n'ouvrir le chantier Spark qu'au moment de la table temporelle.
 

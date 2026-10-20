@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+from sentinelle_lome.config import charger_config
 from sentinelle_lome.pipeline.gold import COLONNES, generer_gold
 
 
@@ -24,7 +25,10 @@ def test_colonnes_et_bornes(sortie):
     assert len(df) > 0 and df["cellule_id"].is_unique
     assert df["proba_inondation"].between(0.0, 1.0).all()
     assert set(df["niveau_alerte"]) <= {"vert", "orange", "rouge"}
-    assert df["quartier"].notna().all() and df["lon"].between(1.10, 1.35).all()
+    assert df["quartier"].notna().all()
+    lon_min, lat_min, lon_max, lat_max = charger_config()["zone_etude"]["emprise"]
+    assert df["lon"].between(lon_min, lon_max).all()
+    assert df["lat"].between(lat_min, lat_max).all()
 
 
 def test_meta_json(sortie):

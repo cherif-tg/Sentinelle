@@ -247,6 +247,25 @@ with onglet_carte:
         pickable=True,
         opacity=0.85,
     )
+
+    couches = [couche]
+    chemin_contour = (meta.get("contour") or {}).get("fichier")
+    if chemin_contour and os.path.exists(chemin_contour):
+        with open(chemin_contour, encoding="utf-8") as _f:
+            geojson_contour = json.load(_f)
+        couches.insert(
+            0,
+            pdk.Layer(
+                "GeoJsonLayer",
+                data=geojson_contour,
+                stroked=True,
+                filled=False,
+                get_line_color=[30, 30, 30],
+                get_line_width=60,
+                line_width_min_pixels=2,
+            ),
+        )
+
     st.pydeck_chart(
         pdk.Deck(
             map_style=None,
@@ -255,7 +274,7 @@ with onglet_carte:
                 longitude=float(vue["lon"].mean()),
                 zoom=10.5,
             ),
-            layers=[couche],
+            layers=couches,
             tooltip={
                 "html": "<b>{quartier}</b><br/>probabilité : {proba_inondation}<br/>niveau : {niveau}",
                 "style": {"backgroundColor": "#1f2937", "color": "white"},

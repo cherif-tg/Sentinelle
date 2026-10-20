@@ -40,7 +40,7 @@ le fichier de risque.
 
 | Onglet | Ce qu'il montre | Comment le lire |
 |---|---|---|
-| Carte | Une cellule par point, colorée selon le seuil courant | Survoler pour le quartier et la probabilité ; la répartition chiffrée est sous la carte |
+| Carte | Une cellule par point, colorée selon le seuil courant, sur le tracé du territoire | Survoler pour le quartier et la probabilité ; la répartition chiffrée est sous la carte |
 | Seuils d'alerte | Distribution des probabilités et courbe de sensibilité | La ligne verticale est le seuil ; le point rouge rappelle la position actuelle |
 | Quartiers | Part de cellules en rouge par quartier, triée | 100 % signifie « toutes les cellules atteignent le seuil », pas « quartier entièrement inondé » |
 | Données et méthode | Aperçu des cellules, export CSV, provenance, limites | Le bouton d'export restitue exactement la vue filtrée |

@@ -25,6 +25,7 @@ import pandas as pd
 from sklearn.isotonic import IsotonicRegression
 
 from sentinelle_lome.config import charger_config
+from sentinelle_lome.contours import charger_contour, masque_points, surface_km2
 from sentinelle_lome.models.declenchement import entrainer_declenchement, niveau_alerte, seuil_decision
 from sentinelle_lome.models.susceptibilite import VARIABLES_PAR_DEFAUT, donnees_synthetiques, entrainer
 
@@ -87,12 +88,14 @@ def _pas_degres(resolution_m: float, lat_moyenne: float) -> tuple[float, float]:
     return pas_lat, pas_lon
 
 
-def grille_emprise(emprise: list[float], resolution_m: float, graine: int) -> pd.DataFrame:
+def grille_emprise(emprise: list[float], resolution_m: float, graine: int, contour=None) -> pd.DataFrame:
     """Grille régulière centrée sur les mailles de `emprise` = [lon_min, lat_min, lon_max, lat_max].
 
     Le pas est converti en degrés (approximation sphérique, sans pyproj) et le nombre de mailles
-    est arrondi vers le bas pour ne pas sortir de l'emprise. Les variables terrain sont tirées
-    de façon déterministe : même graine + même résolution ⇒ même grille.
+    est arrondi vers le bas pour ne pas sortir de l'emprise. Si un `contour` est fourni, seules
+    les cellules dont le centre est à l'intérieur du polygone sont conservées, et les identifiants
+    sont renumérotés dans l'ordre. Les variables terrain sont tirées de façon déterministe :
+    même graine + même résolution ⇒ même grille.
     """
     if resolution_m <= 0:
         raise ValueError("resolution_m doit être > 0")
@@ -104,6 +107,10 @@ def grille_emprise(emprise: list[float], resolution_m: float, graine: int) -> pd
     lons = lon_min + pas_lon * (np.arange(n_lon) + 0.5)
     grille_lon, grille_lat = np.meshgrid(lons, lats)
     df = pd.DataFrame({"lon": grille_lon.ravel(), "lat": grille_lat.ravel()})
+    if contour is not None:
+        df = df.loc[masque_points(contour, df["lon"], df["lat"])].reset_index(drop=True)
+        if df.empty:
+            raise ValueError("aucune cellule dans le contour : vérifier l'emprise et le GeoJSON")
     df.insert(0, "cellule_id", np.arange(len(df), dtype=int))
     return pd.concat([df, variables_terrain(len(df), graine)], axis=1)
 
@@ -254,6 +261,7 @@ def generer_gold(
     n_entrainement: int = 6000,
     n_calibration: int = N_CALIBRATION,
     scenario: str = SCENARIO_DEFAUT,
+    contour: str | None = None,
 ) -> pd.DataFrame:
     """Génère le Parquet de risque et son `<sortie>.meta.json`, puis retourne le DataFrame écrit.
 
@@ -262,10 +270,15 @@ def generer_gold(
     `proba_inondation` est une probabilité calibrée par régression isotone (score A×B → issue
     observée sur un jeu synthétique disjoint), ce qui rend l'application de `seuil_decision`
     légitime — dans les limites du monde synthétique, pas du risque réel.
+
+    Si `contour` désigne un GeoJSON existant, la grille est restreinte à ce territoire ; sinon
+    l'emprise rectangulaire de la configuration est utilisée telle quelle (et le signalement
+    apparaît dans les métadonnées sous `contour.masque`).
     """
     cfg = config if config is not None else charger_config()
     pluie = scenario_pluie(scenario)
-    grille = grille_emprise(cfg["zone_etude"]["emprise_provisoire"], resolution_m, graine)
+    geometry = charger_contour(contour if contour is not None else cfg["zone_etude"].get("contour"))
+    grille = grille_emprise(cfg["zone_etude"]["emprise"], resolution_m, graine, geometry)
     grille = grille.assign(**pluie)
 
     score = combiner_proba(
@@ -313,6 +326,11 @@ def generer_gold(
             ),
         },
         "affectation_quartiers": "centroides approximatifs, plus proche voisin (provisoire)",
+        "contour": {
+            "fichier": contour if contour is not None else cfg["zone_etude"].get("contour"),
+            "masque": geometry is not None,
+            "superficie_km2": round(surface_km2(geometry), 1) if geometry is not None else None,
+        },
     }
     Path(f"{chemin}.meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return df
@@ -323,6 +341,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--sortie", default="data/gold/risque_cellules.parquet", help="chemin du Parquet de sortie")
     p.add_argument("--resolution-m", type=float, default=250.0, help="pas de la grille en mètres (défaut : 250)")
     p.add_argument("--graine", type=int, default=0, help="graine aléatoire (défaut : 0)")
+    p.add_argument("--contour", default=None, help="GeoJSON de contour (défaut : celui de la configuration)")
     p.add_argument(
         "--scenario",
         choices=sorted(SCENARIOS),
@@ -332,7 +351,7 @@ def main(argv: list[str] | None = None) -> None:
     a = p.parse_args(argv)
     if a.resolution_m <= 0:
         p.error("--resolution-m doit être > 0")
-    df = generer_gold(a.sortie, a.resolution_m, a.graine, scenario=a.scenario)
+    df = generer_gold(a.sortie, a.resolution_m, a.graine, scenario=a.scenario, contour=a.contour)
     print(f"[gold] {len(df)} cellules écrites dans {a.sortie} (+ {a.sortie}.meta.json)")
     print(f"[gold] proba_inondation moyenne : {df['proba_inondation'].mean():.4f}")
     print(f"[gold] niveaux d'alerte : {df['niveau_alerte'].value_counts().to_dict()}")

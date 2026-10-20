@@ -6,9 +6,10 @@ projet:
 
 zone_etude:
   nom: Grand Lomé
-  # À CONFIRMER : emprise provisoire (lon_min, lat_min, lon_max, lat_max) à remplacer
-  # par l'emprise administrative réelle du Grand Lomé.
-  emprise_provisoire: [1.10, 6.08, 1.35, 6.30]
+  # Emprise issue du contour GAUL 2025 (union des préfectures Golfe et Agoè-Nyivé), 414,9 km².
+  # Régénérée par : python -m sentinelle_lome.ingestion.gee_contours --projet-gee <projet>
+  emprise: [1.083316, 6.112563, 1.386170, 6.361581]
+  contour: data/raw/contours/grand_lome_gaul2025.geojson
   crs_projete: "EPSG:32631"   # UTM 31N
 
 grille:
